@@ -9009,7 +9009,7 @@ cdef class Model:
     # Probing methods (Probing is tree based)
     def startProbing(self):
         """Initiates probing, making methods SCIPnewProbingNode(), SCIPbacktrackProbing(), SCIPchgVarLbProbing(),
-           SCIPchgVarUbProbing(), SCIPfixVarProbing(), SCIPpropagateProbing(), SCIPsolveProbingLP(), etc available.
+           SCIPchgVarUbProbing(), SCIPfixVarProbing(), SCIPpropagateProbing(), SCIPsolveProbingLP(), solveProbingLPWithPricing(), etc available.
         """
         PY_SCIP_CALL( SCIPstartProbing(self._scip) )
 
@@ -9132,6 +9132,33 @@ cdef class Model:
         cdef SCIP_Bool cutoff
 
         PY_SCIP_CALL( SCIPsolveProbingLP(self._scip, itlim, &lperror, &cutoff) )
+        return lperror, cutoff
+
+    def solveProbingLPWithPricing(self, pretendroot, displayinfo, maxpricerounds=-1):
+        """
+        Solves the LP at the current probing node with pricing.
+
+        Parameters
+        ----------
+        pretendroot    : bool
+            should the pricers be called as if we were at the root node?
+        displayinfo    : bool        
+            should info lines be displayed after each pricing round?
+        maxpricerounds : int
+            maximal number of pricing rounds (-1: no limit); a finite limit means that the LP might not be solved to optimality!
+
+        Returns
+        -------
+        lperror : bool
+            if an unresolved lp error occured
+        cutoff : bool
+            whether the LP was infeasible or the objective limit was reached
+
+        """
+        cdef SCIP_Bool lperror
+        cdef SCIP_Bool cutoff
+
+        PY_SCIP_CALL( SCIPsolveProbingLPWithPricing(self._scip, pretendroot, displayinfo, maxpricerounds, &lperror, &cutoff) )
         return lperror, cutoff
 
     def applyCutsProbing(self):
